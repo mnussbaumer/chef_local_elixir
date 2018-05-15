@@ -1,0 +1,3 @@
+<% @envs.each do |env, value| %>
+<%= "#{@export ? 'export ' : ''}#{env}" %>='<%= value %>'
+<% end %>

@@ -1,0 +1,10 @@
+# Emacs tmps
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+auto-save-list
+.\#*
+
+#OSX
+.DS_Store

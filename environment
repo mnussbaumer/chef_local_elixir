@@ -1,0 +1,46 @@
+# this sets which version of the chefdk to download
+CHEFDK_V=2.5.3
+
+# the root path depends on where you're deploying, for instance in scaleway it doesn't create any other user, so you would use /root, but in EC2 it automatically creates an ubuntu user, so you would use /home/ubuntu
+ROOT_PATH=/root
+
+# this is the user you want to create so that then you can ssh user@address in case you need
+DEPLOYMENT_USER=deploy
+
+# again this depends on where you're deploying, scaleway will be /root/.ssh/authorized_keys , while ubuntu will be /home/ubuntu/.ssh/authorized_keys - you can use whatever works with your workflow
+SSH_KEY_PATH=/root/.ssh/authorized_keys
+
+# this is the email that is required when requesting letsencrypt certificates
+CERTBOT_EMAIL=youremail@address.com
+
+# these are only used by certbot and nginx recipes, they're required to set the correct domains for your ssl certificates and for the nginx server names
+DOMAIN_MAIN=your_domain.com
+DOMAIN_SECONDARY=www.your_domain.com
+
+# this will define the directory name under your user home dir where the app will be installed, the same for the build server, for the systemd service, and nginx configuration upstream name
+APP_NAME=yourapp
+
+# this is used both by nginx and prod.secret.exs for correctly setting your Phoenix Endpoint
+PORT=8888
+
+# the following are used by prod.secret.exs for setting your endpoints configuration, and static assets url in case you're using a CDN to cache your assets
+APP_HOST=your_domain.com
+APP_SCHEME=https
+APP_PORT=443
+APP_STATIC_HOST=something.cloudfront.net
+
+# this is used to create the swapon.sh script, with the amount of swap you wish to allocate - it just creates the partition, does not enable it 
+SWAPSIZE=1024
+
+# this is only used if you use sendgrid with Bamboo, and shows you how you can customise it further if needed
+SENDGRID_API_PROD=sendgrid_api_key
+
+# these are used both to create the postgresql user/database and by prod.secret.exs to connect to it - you don't need to create the database, you could teoretically just put the required credentials to connect to whatever db
+DB_USERNAME=deploy
+DB_PASSWORD=the_password_you_want_for_db
+DB_NAME=the_production_db_name
+DB_POOLSIZE=15
+REPLACE_OS_VARS=true
+
+# this is used by prod.secret.exs for the phoenix endpoint
+SECRET_KEY_BASE=a_random_generated_secret_key
