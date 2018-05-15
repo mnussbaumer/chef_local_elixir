@@ -9,11 +9,13 @@ In both cases you need to have the instance be accessible through SSH, and for t
 
 This was part of my ongoing learning of DevOps. I had spent some time reading about Docker, Ansible and Chef. Since I was familiar with Ruby, Docker seemed a bit too complex to grasp at once and Ansible didn't provide anything more than either the other two options, I decided to do it using Chef.
 
-Chef is intended for large scale system administration with several nodes, but it did provide a `chef-solo` mode before (now deprecated) and currently a way of running the client with a local flag, which in turn made it more similar to Ansible and a great option to manage small servers.
+Chef is intended for large scale system administration with several nodes, but it did provide a `chef-solo` mode before (now deprecated) and currently provides a way of running the client with a local flag, which in turn makes it similar to Ansible and a great option to manage small servers rigs.
+
+The way to use this repo is to download it as a zip, then unzip it into a folder, name it accordingly and customise the `environment` file (and any other recipes or templates inside) for each servers setup you wish to use. Then unzip it once more if you want to add a new server setup and so on.
 
 These recipes assume you're using `e-deliver` with `distillery` to build your Elixir Apps. They're also intended to be used with a build server and a production server, although I'm almost positive you can run both recipes on the same server and use that as both the build and production server. They also install chefdk for running the recipes.
 
-Besides that it includes recipes for setting up Postgresql, Letsencrypt and the proper configuration for Nginx. It installs emacs as well with my default configuration on the servers.
+Besides that it includes recipes for setting up Postgresql, Letsencrypt and the proper configuration for Nginx with SSL. It installs emacs as well with a default useful configuration and packages on the servers.
 
 It also assumes the creation of a user for it, usually "deploy" but you can name it anything. The cool thing, is that all of that is basically controlled by a single file. If for nothing else you can check both the recipes, to see the logic for provisioning the server, and the templates, for examples of how to configure certain files (nginx, systemd, etc).
 
@@ -21,16 +23,17 @@ As an example of how you would provision a build server in EC2:
 
 ./deploy_kitchen.sh ubuntu@your_instance_address 'recipe[elixir_web::build_server]'
 
-Now you're ready to just put your instance address on your e-deliver config and build a release there. This server will have Erlang 20.1 installed and Elixir, Git, Yarn and Node, and build-essential package, a user named whatever you like, a swap enable bash script, a proper `.profile` file exporting all your env variables and a `prod.secret.exs` file accessible to the distillery release builder.
+Now you're ready to just put your instance address on your e-deliver config and build a release there. This server will have Erlang 20.1 installed and Elixir, Git, Yarn and Node, and build-essential package, a user named whatever you like, a swap enable bash script, a proper `.profile` file exporting all your env variables and a `prod.secret.exs` file accessible to the distillery release builder. You pass the options for the recipes you want to run (or none if you want the default production server only) as a comma separated argument to the `./deploy_kitchen.sh` script. This in turn packs your current directory into a tar and uploads it to the server, then calls `install.sh` to install the chefdk client on the server and run the recipes you named. In the process it sources the environment file as environment variables to the bash sessions running, so that they're accessible through the recipes. It also makes it easy to ensure parity between the build server environment and the production server. And because its idempotent you can use the same build server for different apps, by just running the build_server recipe once with an environment file and again with a different one.
 
 
-To provision a production server for running your elixir web app:
+To provision a production server for running your elixir web app you would simply run:
 
 ./deploy_kitchen.sh ubuntu@your_instance_address
 
 or
 
 ./deploy_kitchen.sh ubuntu@your_instance_address 'recipe[elixir_web::default]'
+
 
 You can also chain commands, so for instance if you already have a domain purchased with the relevant A & CNAME records pointing to your instances web address, and you want to provision a postgresql database on this server as well, you could simply run:
 
