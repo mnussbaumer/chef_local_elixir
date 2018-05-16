@@ -1,3 +1,5 @@
+*Use at will;;*
+
 A group of recipes to automate server provisioning for Elixir on Ubuntu.
 These recipes work at least on AWS EC2 instances with the regular Ubuntu Image and Scaleway servers with their Ubuntu Images.
 
@@ -7,9 +9,9 @@ ssh'ing as root then running
 
 In both cases you need to have the instance be accessible through SSH, and for the running server, in the case of AWS EC2 you need to have that instance allow inbound traffic for HTTP (& HTTPS if you wish to use SSL)
 
-This was part of my ongoing learning of DevOps. I had spent some time reading about Docker, Ansible and Chef. Since I was familiar with Ruby, Docker seemed a bit too complex to grasp at once and Ansible didn't provide anything more than either the other two options, I decided to do it using Chef.
+This was part of my ongoing learning of DevOps. I had spent some time reading about Docker, Ansible and Chef. Since I was familiar with Ruby, Docker seemed a bit too complex to grasp at once and Ansible didn't provide anything more than either the other two options, I decided to do it using Chef - because in this mode it suited well small server setups but the knowledge of its dsl would still be meaningful if wanted to develop further skills in DevOps by providing a rich system for managing complex clusters.
 
-Chef is intended for large scale system administration with several nodes, but it did provide a `chef-solo` mode before (now deprecated) and currently provides a way of running the client with a local flag, which in turn makes it similar to Ansible and a great option to manage small servers rigs.
+Chef is intended for large scale system administration with several nodes, with an online instance working as central repository/command center (actually powered by Erlang) but before it did provide a `chef-solo` mode (now deprecated) and currently provides a way of running the client with a local flag, which in turn makes it similar to Ansible and a great option to manage small servers rigs.
 
 The way to use this repo is to download it as a zip, then unzip it into a folder, name it accordingly and customise the `environment` file (and any other recipes or templates inside) for each servers setup you wish to use. Then unzip it once more if you want to add a new server setup and so on.
 
@@ -17,13 +19,13 @@ These recipes assume you're using `e-deliver` with `distillery` to build your El
 
 Besides that it includes recipes for setting up Postgresql, Letsencrypt and the proper configuration for Nginx with SSL. It installs emacs as well with a default useful configuration and packages on the servers.
 
-It also assumes the creation of a user for it, usually "deploy" but you can name it anything. The cool thing, is that all of that is basically controlled by a single file. If for nothing else you can check both the recipes, to see the logic for provisioning the server, and the templates, for examples of how to configure certain files (nginx, systemd, etc).
+It also assumes the creation of a user for it, usually "deploy" but you can name it anything. The cool thing, is that all of that is basically controlled by a single file. If for nothing else you can check both the recipes, to see the logic for provisioning the server, and the templates, for examples of how to configure certain files (nginx, systemd, etc). One detail is that it the elixir config prod.secret.exs file assumes you're using bamboo, you'll need to edit that template in case you don't or your probably won't be able to run the build as bamboo will be missing and won't be configurable.
 
 As an example of how you would provision a build server in EC2:
 
-./deploy_kitchen.sh ubuntu@your_instance_address 'recipe[elixir_web::build_server]'
+`./deploy_kitchen.sh ubuntu@your_instance_address 'recipe[elixir_web::build_server]'`
 
-Now you're ready to just put your instance address on your e-deliver config and build a release there. This server will have Erlang 20.1 installed and Elixir, Git, Yarn and Node, and build-essential package, a user named whatever you like, a swap enable bash script, a proper `.profile` file exporting all your env variables and a `prod.secret.exs` file accessible to the distillery release builder. You pass the options for the recipes you want to run (or none if you want the default production server only) as a comma separated argument to the `./deploy_kitchen.sh` script. This in turn packs your current directory into a tar and uploads it to the server, then calls `install.sh` to install the chefdk client on the server and run the recipes you named. In the process it sources the environment file as environment variables to the bash sessions running, so that they're accessible through the recipes. It also makes it easy to ensure parity between the build server environment and the production server. And because its idempotent you can use the same build server for different apps, by just running the build_server recipe once with an environment file and again with a different one.
+Now you're ready to just put your instance address on your e-deliver config and build a release there. This server will have Erlang 20.1 installed and Elixir, Git, Yarn, Node, and build-essential package, a user named whatever you like, a swap enable bash script, a proper `.profile` file exporting all your env variables and a `prod.secret.exs` file accessible to the distillery release builder. You pass the options for the recipes you want to run (or none if you want the default production server only) as a comma separated argument to the `./deploy_kitchen.sh` script. This in turn packs your current directory into a tar and uploads it to the server (hence you don't even need to commit the changes to any files, since they'll be packed fresh whenever you run the deploy_kitchen script), then calls `install.sh` to install the chefdk client on the server and run the recipes you named. In the process it sources the environment file as environment variables to the bash sessions running, so that they're accessible through the recipes. It also makes it easy to ensure parity between the build server environment and the production server. And because its idempotent you can use the same build server for different apps, by just running the build_server recipe once with an environment file (which will replace the environment, source it, and replace the prod.secret.exs file if they've changed) and then repeat again from a different directory with different environment files.
 
 
 To provision a production server for running your elixir web app you would simply run:
@@ -46,7 +48,7 @@ LANG, LC_ALL and LANGUAGE locales set to en_US.UTF-8
 A user named whatever you want (usually `deploy`)
 With a bash shell associated to it, and a home directory (e.g. `/home/deploy`)
 UFW installed
-EMACS installed, with a bunch of useful packages
+EMACS installed, with a bunch of useful packages and settings
 NGINX installed
 SSH keys copied to this user's `authorized_keys` (customisable from where to copy them)
 A `.swapon.sh` and `.swapoff.sh` bash scripts
@@ -104,7 +106,7 @@ REPLACE_OS_VARS=true
 SECRET_KEY_BASE=a_random_generated_secret_key
 ```
 
-(check the environment file to see a description)
+(check the environment file to see a description and read the recipes, ruby makes it very easy to understand what's happening, it's like plain english)
 
 You can add whatever variables to this file and they will be sourced automatically to the .profiles and be made available to the systemd task. With these you can easily set variables here and further down the line set them in your `prod.secret.exs` file, allowing you to very easily customise the config during build, and in case you use runtime definitions, they will be correctly set on the systemd environment where your app runs.
 
@@ -160,7 +162,9 @@ pre_erlang_clean_compile() {
 }
 ```
 
-For a viable prod.secret.exs file you can look into the templates folder.
+For a viable prod.secret.exs file you can look into the templates folder. This is a template so you should clean it up accordingly (you'll also need to set your app there so the configs are correctly set...)
 
 Next step will be adding a staging environment that can be different from the production environment, so that you can build a production like server but with specific environment values for staging - if you can run your staging with the same environment as production then all you need to do is set the edeliver config staging values and then provision your staging server just the same way you would your production one.
+
+And after that making the certbot usage idempotent as well.
 
