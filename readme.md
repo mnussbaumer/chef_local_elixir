@@ -25,7 +25,11 @@ As an example of how you would provision a build server in EC2:
 
 `./deploy_kitchen.sh ubuntu@your_instance_address 'recipe[elixir_web::build_server]'`
 
-Now you're ready to just put your instance address on your e-deliver config and build a release there. This server will have Erlang 20.1 installed and Elixir, Git, Yarn, Node, and build-essential package, a user named whatever you like, a swap enable bash script, a proper `.profile` file exporting all your env variables and a `prod.secret.exs` file accessible to the distillery release builder. You pass the options for the recipes you want to run (or none if you want the default production server only) as a comma separated argument to the `./deploy_kitchen.sh` script. This in turn packs your current directory into a tar and uploads it to the server (hence you don't even need to commit the changes to any files, since they'll be packed fresh whenever you run the deploy_kitchen script), then calls `install.sh` to install the chefdk client on the server and run the recipes you named. In the process it sources the environment file as environment variables to the bash sessions running, so that they're accessible through the recipes. It also makes it easy to ensure parity between the build server environment and the production server. And because its idempotent you can use the same build server for different apps, by just running the build_server recipe once with an environment file (which will replace the environment, source it, and replace the prod.secret.exs file if they've changed) and then repeat again from a different directory with different environment files.
+Now you're ready to just put your instance address on your e-deliver config and build a release there. This server will have Erlang 20.1 installed and Elixir, Git, Yarn, Node, and build-essential package, a user named whatever you like, a swap enable bash script, a proper `.profile` file exporting all your env variables and a `prod.secret.exs` file accessible to the distillery release builder. 
+
+You pass the options for the recipes you want to run (or none if you want the default production server only) as a comma separated argument to the `./deploy_kitchen.sh` script. This in turn packs your current directory into a tar and uploads it to the server (hence you don't even need to commit the changes to any files, since they'll be packed fresh whenever you run the deploy_kitchen script), then calls `install.sh` to install the chefdk client on the server and run the recipes you named. In the process it sources the environment file as environment variables to the bash sessions running, so that they're accessible through the recipes. 
+
+It also makes it easy to ensure parity between the build server environment and the production server. And because its idempotent you can use the same build server for different apps, by just running the build_server recipe once with an environment file (which will replace the environment, source it, and replace the prod.secret.exs file if they've changed) and then repeat again from a different directory with different environment files.
 
 
 To provision a production server for running your elixir web app you would simply run:
@@ -45,26 +49,39 @@ You would end up with a server with - shown by the results of each recipe:
 
 **recipe[elixir_web::default]**
 LANG, LC_ALL and LANGUAGE locales set to en_US.UTF-8
+
 A user named whatever you want (usually `deploy`)
+
 With a bash shell associated to it, and a home directory (e.g. `/home/deploy`)
+
 UFW installed
+
 EMACS installed, with a bunch of useful packages and settings
+
 NGINX installed
+
 SSH keys copied to this user's `authorized_keys` (customisable from where to copy them)
+
 A `.swapon.sh` and `.swapoff.sh` bash scripts
+
 Basic nginx available-site & enabled-site
+
 The environment variables you need exported through `~/.profile`
+
 A systemd service, correctly sourcing those variables as well, with restart on failure for your webapp.
 
 In all relevant places, as well as name of the services and what not, your app name will be used.
 
 **recipe[elixir_web::postgresql]**
 Installs postgresql from postgresql apt-repository and verify it
+
 Creates a postgres user, with a password and create a database for it (that you can customise, both user name, password and database name)
+
 Ready to be used
 
 **recipe[elixir_web::certbot]**
 Installs certbot and requests the challenge for the domains you specify (both primary `something.com` and `www.something.com`), and generates a strong diffie-hellman key, along with the correct settings for using it (which sounds really cool but I don't totally understand)
+
 It also sets up a cron task for renewing your certs every 60 days.
 
 **recipe[elixir_web::nginx]**
