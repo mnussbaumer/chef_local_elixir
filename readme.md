@@ -1,5 +1,7 @@
 *Use at will;;*
 
+(the original inspiration for this came from http://www.opinionatedprogrammer.com/2011/06/chef-solo-tutorial-managing-a-single-server-with-chef/)
+
 A group of recipes to automate server provisioning for Elixir on Ubuntu.
 These recipes work at least on AWS EC2 instances with the regular Ubuntu Image and Scaleway servers with their Ubuntu Images.
 
